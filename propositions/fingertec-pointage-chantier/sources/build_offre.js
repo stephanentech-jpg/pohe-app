@@ -67,11 +67,11 @@ const common = [
   ["Mini-onduleur 12 V (autonomie en cas de coupure de courant)", 1, 55000],
   ["Boîtier de protection anti-poussière / anti-pluie pour chantier", 1, 85000],
   ["Cartes de proximité RFID (secours si empreinte illisible) – lot", 50, 1500],
-  ["Logiciel de gestion des présences FingerTec TCMS V3 – licence perpétuelle", 1, 0],
+  ["Logiciel de gestion des présences FingerTec TCMS V3 – licence à vie (paiement unique)", 1, 650000],
   ["Installation, fixation, câblage et mise en service sur chantier", 1, 150000],
   ["Configuration logiciel (horaires, règles retards / heures sup., import du personnel)", 1, 0],
   ["Formation des utilisateurs (½ journée, jusqu'à 5 personnes)", 1, 75000],
-  ["Transport du matériel et mission d'installation Abidjan – Odienné (2 techniciens, aller-retour, hébergement)", 1, 350000],
+  ["Transport du matériel et mission d'installation Abidjan – Odienné (2 techniciens, 2 jours sur site, aller-retour, hébergement)", 1, 450000],
 ];
 const optA = [["Pointeuse biométrique FingerTec Q2i (empreinte + carte RFID + code)", 1, 740000], ...common];
 const optB = [["Pointeuse biométrique FingerTec Face ID 5 (empreinte + visage + paume + carte RFID)", 1, 900000], ...common];
@@ -87,8 +87,6 @@ function priceTable(lines) {
   const n = rows.length;
   return { tbl: table([600, 5000, 600, 1400, 1426], rows, { right: [3, 4], center: [0, 2], totalRows: [n - 3, n - 2, n - 1] }), ht, tva };
 }
-const A = priceTable(optA);
-const B = priceTable(optB);
 
 // ---------- document ----------
 const header = new Header({ children: [
@@ -106,7 +104,7 @@ const footer = new Footer({ children: [
   new Paragraph({
     alignment: AlignmentType.CENTER, spacing: { after: 0 },
     border: { top: { style: BorderStyle.SINGLE, size: 4, color: "A6A6A6", space: 4 } },
-    children: [t("Marcory Zone 4C, Bd du 7 Décembre – 26 BP 678 Abidjan 26 – Tél. (225) 27 21 24 08 64 – Fax (225) 27 21 24 08 74 – www.ntech-support.com", { size: 14, color: "595959" })],
+    children: [t("Marcory GFCI, Bd du 7 Décembre – 26 BP 678 Abidjan 26 – Tél. (225) 27 21 24 08 64 – Fax (225) 27 21 24 08 74 – www.ntech-support.com", { size: 14, color: "595959" })],
   }),
   new Paragraph({
     alignment: AlignmentType.CENTER, spacing: { after: 0 },
@@ -114,27 +112,63 @@ const footer = new Footer({ children: [
   }),
 ]});
 
-const body = [];
-
-// Title block
-body.push(p([new TextRun({ text: "OFFRE TECHNIQUE ET FINANCIÈRE", font: FONT, size: 36, bold: true, color: BLUE })], { align: AlignmentType.CENTER, before: 200, after: 60 }));
-body.push(p([t("Système de pointage biométrique et de gestion des présences FingerTec – Chantier", { size: 24, bold: true })], { align: AlignmentType.CENTER, after: 240 }));
-
-body.push(table([2400, 6626], [
-  ["Offre N°", "2611_____ (à compléter)"],
-  ["Date", "3 novembre 2026"],
+// ===================== shared blocks =====================
+const DATE = "3 novembre 2026";
+const titleBlock = (title, subtitle) => [
+  p([new TextRun({ text: title, font: FONT, size: 36, bold: true, color: BLUE })], { align: AlignmentType.CENTER, before: 200, after: 60 }),
+  p([t(subtitle, { size: 24, bold: true })], { align: AlignmentType.CENTER, after: 240 }),
+];
+const infoTable = (ref, objet, extra = []) => table([2400, 6626], [
+  ["Référence", ref],
+  ["Date", DATE],
   ["Client", "MATRELEC"],
   ["Site d'installation", "Chantier d'Odienné"],
-  ["Objet", "Fourniture, installation, configuration et formation – pointeuse biométrique par empreinte digitale et logiciel de gestion des présences pour chantier"],
-  ["Validité de l'offre", "30 jours à compter de la date d'émission"],
+  ["Objet", objet],
+  ...extra,
   ["Interlocuteur", "Stéphane POHE – Technical Manager – Cel. (225) 07 48 27 07 93 – stephane.ntech@gmail.com"],
-], { header: false, firstColShade: true, firstColBold: true, size: 19 }));
+], { header: false, firstColShade: true, firstColBold: true, size: 19 });
+const garantieSav = [
+  ["Garantie", "12 mois pièces et main-d'œuvre sur la pointeuse à compter de la réception. Exclusions : casse, choc, surtension, intervention d'un tiers, usage non conforme."],
+  ["Service après-vente", "Assistance téléphonique et à distance aux heures ouvrables ; intervention sur site à Odienné sous 72 heures ouvrées (déplacement facturé hors garantie) ; remplacement ou réparation via le fabricant FingerTec pendant la garantie."],
+];
+const signature = () => table([4513, 4513], [
+  ["Pour NTECH SUPPORT", "Bon pour accord – Le Client"],
+  ["Stéphane POHE|Technical Manager||||(Signature et cachet)", "Nom :|Fonction :|Date :|||(Signature et cachet)"],
+], { size: 18 });
 
+function makeDoc(title, children) {
+  return new Document({
+    creator: "NTECH SUPPORT", title,
+    styles: {
+      default: { document: { run: { font: FONT, size: 20 } } },
+      paragraphStyles: [
+        { id: "Heading1", name: "Heading 1", basedOn: "Normal", next: "Normal", quickFormat: true,
+          run: { font: FONT, size: 26, bold: true, color: BLUE },
+          paragraph: { spacing: { before: 280, after: 120 }, keepNext: true, outlineLevel: 0 } },
+        { id: "Heading2", name: "Heading 2", basedOn: "Normal", next: "Normal", quickFormat: true,
+          run: { font: FONT, size: 22, bold: true, color: BLUE },
+          paragraph: { spacing: { before: 180, after: 80 }, keepNext: true, outlineLevel: 1 } },
+      ],
+    },
+    numbering: { config: [{ reference: "bul", levels: [{ level: 0, format: LevelFormat.BULLET, text: "•", alignment: AlignmentType.LEFT,
+      style: { paragraph: { indent: { left: 500, hanging: 260 } } } }] }] },
+    sections: [{
+      properties: { page: { margin: { top: 1300, bottom: 1200, left: 1100, right: 1100, header: 500, footer: 450 } } },
+      headers: { default: header }, footers: { default: footer },
+      children,
+    }],
+  });
+}
+
+// ===================== 1) OFFRE TECHNIQUE =====================
+const body = [];
+body.push(...titleBlock("OFFRE TECHNIQUE", "Système de pointage biométrique et de gestion des présences FingerTec – Chantier d'Odienné"));
+body.push(infoTable("OT 2611_____ (à compléter)", "Fourniture, installation, configuration et formation – pointeuse biométrique par empreinte digitale et logiciel de gestion des présences pour chantier",
+  [["Offres financières", "Remises séparément : Offre Face ID 5 et Offre Q2i"]]));
 body.push(p("", { after: 120 }));
 body.push(p("Madame, Monsieur,", { after: 120 }));
-body.push(p("Nous vous remercions pour votre demande et avons le plaisir de vous soumettre notre proposition technique et financière pour la mise en place d'un système de gestion des présences par empreinte digitale sur votre chantier d'Odienné. NTECH SUPPORT est revendeur agréé FingerTec en Côte d'Ivoire : le matériel est commandé directement auprès du fabricant, ce qui garantit l'authenticité des produits, la garantie constructeur et l'accès au support technique FingerTec. Nos équipes interviennent déjà dans la région d'Odienné.", { after: 120 }));
+body.push(p("Nous vous remercions pour votre demande et avons le plaisir de vous soumettre notre proposition technique pour la mise en place d'un système de gestion des présences par empreinte digitale sur votre chantier d'Odienné. Les prix font l'objet de deux offres financières séparées, une par modèle de pointeuse. NTECH SUPPORT est revendeur agréé FingerTec en Côte d'Ivoire : le matériel est commandé directement auprès du fabricant, ce qui garantit l'authenticité des produits, la garantie constructeur et l'accès au support technique FingerTec. Nos équipes interviennent déjà dans la région d'Odienné.", { after: 120 }));
 
-// 1. Besoin
 body.push(h1("1. Compréhension du besoin"));
 body.push(p("Votre demande et les contraintes propres à un chantier nous conduisent aux exigences suivantes :"));
 [
@@ -146,34 +180,31 @@ body.push(p("Votre demande et les contraintes propres à un chantier nous condui
   ["installation, configuration, formation, garantie et service après-vente assurés localement.", "Accompagnement : "],
 ].forEach(([x, b]) => body.push(bullet(x, b)));
 
-// 2. Solution
 body.push(h1("2. Architecture de la solution proposée"));
 body.push(p("La pointeuse est installée à l'entrée du chantier, à l'abri (guérite, bungalow ou base vie), dans un boîtier de protection et alimentée par un mini-onduleur. Chaque pointage est enregistré dans la mémoire interne de la pointeuse, ce qui rend le système indépendant du réseau."));
 body.push(table([2300, 6726], [
   ["Mode", "Fonctionnement"],
-  ["Hors connexion Internet", "La pointeuse fonctionne de façon autonome et stocke les pointages. Les données sont récupérées sur le PC de gestion (logiciel TCMS V3) par réseau local (câble Ethernet / routeur sur site). Sur le modèle Q2i, la récupération est aussi possible par clé USB. Aucun abonnement ni Internet n'est requis."],
+  ["Hors connexion Internet", "La pointeuse fonctionne de façon autonome et stocke les pointages. Les données sont récupérées sur le PC de gestion (logiciel TCMS V3) par réseau local (câble Ethernet / routeur sur site). Sur le modèle Q2i, la récupération est aussi possible par clé USB. Aucune connexion Internet n'est requise."],
   ["Avec connexion Internet", "La pointeuse est raccordée en TCP/IP à un routeur 4G sur le chantier (option). Le logiciel installé au siège de MATRELEC télécharge automatiquement les pointages d'Odienné, ou les données sont envoyées vers la plateforme cloud TimeTec TA (option) pour une consultation à distance en temps réel."],
 ], { firstColBold: true, size: 18 }));
 
-// 3. Modèles
 body.push(h1("3. Modèles de pointeuses FingerTec proposés"));
 body.push(p("Nous vous proposons deux modèles actuels de la gamme FingerTec. Le modèle Face ID 6, arrêté par le fabricant, a été remplacé par le Face ID 5, qui ajoute la reconnaissance par empreinte digitale."));
 body.push(table([2626, 3200, 3200], [
-  ["Caractéristique", "Option A – FingerTec Q2i", "Option B – FingerTec Face ID 5 (recommandée)"],
-  ["Positionnement", "Pointeuse empreinte digitale – solution économique", "Terminal hybride multi-biométrique – meilleure fiabilité sur chantier"],
-  ["Modes d'identification", "Empreinte digitale, carte RFID, code PIN", "Empreinte digitale, visage, paume, carte RFID, code PIN"],
-  ["Capacité empreintes", "3 000", "10 000 (+ 10 000 visages, 3 000 paumes)"],
-  ["Mémoire de pointages", "120 000 transactions", "200 000 transactions"],
-  ["Communication", "TCP/IP, USB (clé), RS232/RS485", "TCP/IP"],
-  ["Points forts chantier", "Simple, robuste, export par clé USB sans réseau", "Pointage sans contact (visage/paume) si l'empreinte est usée ou sale ; caméra 2 MP faible luminosité"],
-  ["Logiciel inclus", "TCMS V3 (licence incluse)", "TCMS V3 (licence incluse)"],
+  ["Caractéristique", "FingerTec Face ID 5 (recommandée)", "FingerTec Q2i"],
+  ["Positionnement", "Terminal hybride multi-biométrique – meilleure fiabilité sur chantier", "Pointeuse empreinte digitale – solution économique"],
+  ["Modes d'identification", "Empreinte digitale, visage, paume, carte RFID, code PIN", "Empreinte digitale, carte RFID, code PIN"],
+  ["Capacité empreintes", "10 000 (+ 10 000 visages, 3 000 paumes)", "3 000"],
+  ["Mémoire de pointages", "200 000 transactions", "120 000 transactions"],
+  ["Communication", "TCP/IP", "TCP/IP, USB (clé), RS232/RS485"],
+  ["Points forts chantier", "Pointage sans contact (visage/paume) si l'empreinte est usée ou sale ; caméra 2 MP faible luminosité", "Simple, robuste, export par clé USB sans réseau"],
+  ["Logiciel", "TCMS V3 (licence à vie)", "TCMS V3 (licence à vie)"],
   ["Garantie", "12 mois", "12 mois"],
 ], { firstColShade: true, firstColBold: true, size: 17 }));
 body.push(p([t("Notre recommandation : ", { bold: true }), t("sur un chantier, une partie des ouvriers a des empreintes usées, coupées ou souillées (ciment, peinture). Le Face ID 5 permet à ces personnes de pointer par le visage ou la paume, sans carte à gérer ni risque de pointage pour un collègue. C'est le modèle le plus vendu de la gamme FingerTec.", { italics: true })], { before: 120 }));
 
-// 4. Logiciel
 body.push(h1("4. Logiciel de gestion des présences"));
-body.push(h2("4.1 FingerTec TCMS V3 – inclus"));
+body.push(h2("4.1 FingerTec TCMS V3"));
 body.push(p("TCMS V3 est le logiciel de gestion des présences de FingerTec. Il s'installe sur un PC Windows du chantier ou du siège et fonctionne entièrement en local, sans Internet."));
 [
   ["plannings fixes, rotatifs (équipes / postes) et horaires flexibles, jours fériés et repos ;", "Horaires : "],
@@ -186,12 +217,11 @@ body.push(p("TCMS V3 est le logiciel de gestion des présences de FingerTec. Il 
 body.push(h2("4.2 Conditions de licence"));
 body.push(table([2626, 6400], [
   ["Logiciel", "Conditions"],
-  ["TCMS V3 (local)", "Licence perpétuelle fournie gratuitement avec chaque pointeuse FingerTec, activée avec le numéro de série de l'appareil. Aucun abonnement, aucune redevance annuelle, mises à jour logicielles gratuites."],
+  ["TCMS V3 (local)", "Licence à vie : paiement unique, sans redevance annuelle. La licence est activée pour votre entreprise et couvre l'ensemble des pointeuses FingerTec du site. Prix : voir les offres financières."],
   ["TimeTec TA (cloud, option)", "Abonnement annuel calculé par employé. Consultation des présences à distance (navigateur et application mobile), alertes, multi-chantiers. Tarif communiqué sur demande selon votre effectif."],
 ], { firstColBold: true, size: 18 }));
 
-// 5. Prestations
-body.push(h1("5. Prestations incluses"));
+body.push(h1("5. Prestations"));
 body.push(h2("5.1 Installation et configuration"));
 [
   "visite et choix de l'emplacement de la pointeuse (abri, hauteur, éclairage, alimentation) ;",
@@ -207,67 +237,111 @@ body.push(h2("5.2 Formation des utilisateurs"));
   ["enrôlement des employés, récupération des pointages, corrections, édition des rapports, exports XLSX / CSV, sauvegarde ;", "Contenu : "],
   ["remise d'un guide d'utilisation simplifié en français.", "Support : "],
 ].forEach(([x, b]) => body.push(bullet(x, b)));
+body.push(h2("5.3 Intervention à Odienné"));
+body.push(p("Une équipe de deux techniciens se déplace depuis Abidjan avec le matériel pour deux jours de travail sur site : installation, configuration, enrôlement et formation."));
 
-// 6. Offre financière
+body.push(h1("6. Garantie et service après-vente"));
+body.push(table([2626, 6400], [["Rubrique", "Engagement"], ...garantieSav], { firstColShade: true, firstColBold: true, size: 18 }));
+body.push(p("Nous restons à votre disposition pour une démonstration ou une visite du chantier afin d'affiner la proposition (nombre d'employés, nombre d'accès, horaires de travail).", { before: 200, after: 200 }));
+body.push(p("Veuillez agréer, Madame, Monsieur, l'expression de nos salutations distinguées.", { after: 240 }));
+body.push(p([t("Stéphane POHE", { bold: true })], { after: 0 }));
+body.push(p("Technical Manager – NTECH SUPPORT"));
+
+// ---------- Annexe : fiches techniques ----------
+const spec = (rows) => table([3000, 6026], [["Caractéristique", "Valeur"], ...rows], { firstColShade: true, firstColBold: true, size: 18 });
 body.push(new Paragraph({ children: [new PageBreak()] }));
-body.push(h1("6. Offre financière"));
-body.push(p("Prix exprimés en francs CFA, pour une pointeuse installée sur le chantier d'Odienné, transport et mission d'installation compris. Pour plusieurs pointeuses sur le même site, seuls le matériel et l'installation sont ajoutés : la mission de déplacement n'est facturée qu'une fois."));
-body.push(h2("Option A – Pointeuse FingerTec Q2i"));
-body.push(A.tbl);
-body.push(p("", { after: 120 }));
-body.push(h2("Option B – Pointeuse FingerTec Face ID 5 (recommandée)"));
-body.push(B.tbl);
-body.push(p("", { after: 120 }));
-body.push(h2("Options complémentaires"));
-body.push(table([5600, 3426], [
-  ["Désignation", "Prix HT"],
-  ["Pointeuse supplémentaire sur le même site (matériel, accessoires, installation)", "Prix des lignes 1 à 7 de l'option choisie"],
+body.push(h1("Annexe – Fiches techniques des équipements"));
+body.push(p("Les fiches constructeur FingerTec (brochures officielles en anglais) sont jointes à la présente offre. Les principales caractéristiques sont reprises ci-dessous.", { italics: true }));
+body.push(h2("A.1 Pointeuse FingerTec Face ID 5"));
+body.push(spec([
+  ["Type", "Terminal hybride de pointage et de contrôle d'accès multi-biométrique"],
+  ["Modes d'identification", "Visage, empreinte digitale, paume, carte RFID, code PIN (combinables)"],
+  ["Capacité visages", "10 000"],
+  ["Capacité empreintes", "10 000"],
+  ["Capacité paumes", "3 000"],
+  ["Capacité cartes", "10 000"],
+  ["Mémoire de pointages", "200 000 transactions"],
+  ["Caméra", "2 mégapixels, WDR, adaptée à la faible luminosité"],
+  ["Processeur / mémoire", "Double cœur 900 MHz, 512 Mo RAM, 8 Go flash"],
+  ["Écran", "Écran tactile couleur"],
+  ["Communication", "TCP/IP (réseau local, routeur 4G)"],
+  ["Boîtier", "Façade en verre, cadre aluminium"],
+  ["Logiciel compatible", "FingerTec TCMS V3, TimeTec TA (cloud)"],
+  ["Garantie", "12 mois"],
+]));
+body.push(h2("A.2 Pointeuse FingerTec Q2i"));
+body.push(spec([
+  ["Type", "Pointeuse et contrôle d'accès par empreinte digitale"],
+  ["Modes d'identification", "Empreinte digitale, carte RFID, code PIN (combinables)"],
+  ["Capacité empreintes", "3 000"],
+  ["Mémoire de pointages", "120 000 transactions"],
+  ["Écran", "Écran couleur TFT"],
+  ["Communication", "TCP/IP, RS232 / RS485, port USB (récupération des pointages par clé USB)"],
+  ["Alimentation", "12 V DC, mini-onduleur en option"],
+  ["Logiciel compatible", "FingerTec TCMS V3, TimeTec TA (cloud)"],
+  ["Garantie", "12 mois"],
+]));
+body.push(h2("A.3 Logiciel FingerTec TCMS V3"));
+body.push(spec([
+  ["Type", "Logiciel de gestion des présences, installé en local"],
+  ["Poste requis", "PC sous Windows 10 / 11"],
+  ["Fonctionnement", "Sans Internet (réseau local ou clé USB) ; téléchargement automatique des pointages si connecté"],
+  ["Horaires", "Fixes, rotatifs, flexibles ; jours fériés et repos"],
+  ["Calculs", "Retards, départs anticipés, absences, congés, heures supplémentaires"],
+  ["Rapports et exports", "Feuilles de présence, rapports journaliers / mensuels ; export Excel (XLSX) et CSV"],
+  ["Multi-sites", "Plusieurs pointeuses et plusieurs chantiers depuis un même poste"],
+  ["Licence", "Licence à vie, paiement unique, sans redevance annuelle"],
+]));
+body.push(h2("A.4 Accessoires de chantier"));
+body.push(spec([
+  ["Mini-onduleur 12 V", "Maintient la pointeuse en service pendant les coupures de courant"],
+  ["Boîtier de protection", "Protège la pointeuse de la poussière (harmattan) et de la pluie ; fixation murale"],
+  ["Cartes RFID", "Cartes de proximité pour les employés dont l'empreinte est difficile à lire"],
+]));
+
+// ===================== 2) OFFRES FINANCIÈRES =====================
+const options = () => table([5600, 3426], [
+  ["Options complémentaires", "Prix HT"],
+  ["Pointeuse supplémentaire sur le même site (matériel, accessoires, installation)", "Prix des lignes 1 à 4 et 6 (licence déjà acquise)"],
   ["Routeur 4G + configuration de la remontée des pointages vers le siège", "65 000 F"],
   ["Kit d'alimentation solaire autonome pour la pointeuse (panneau, batterie, régulateur), si le site n'a pas de courant stable", "250 000 F"],
   ["Abonnement cloud TimeTec TA (consultation à distance)", "Sur devis selon effectif"],
-  ["Contrat de maintenance annuel (à partir de la 2e année) : 1 visite préventive sur site, assistance à distance prioritaire", "250 000 F / an"],
-], { right: [1], size: 18 }));
-
-// 7. Conditions
-body.push(h1("7. Conditions commerciales"));
-body.push(table([2626, 6400], [
+  ["Contrat de maintenance annuel (à partir de la 2e année) : 1 visite préventive sur site à Odienné, transport compris, et assistance à distance prioritaire", "650 000 F / an"],
+], { right: [1], size: 18 });
+const conditions = () => table([2626, 6400], [
   ["Rubrique", "Conditions"],
   ["Délai de livraison", "2 à 3 semaines après réception du bon de commande et de l'acompte (importation directe FingerTec), plus 2 jours d'acheminement jusqu'à Odienné."],
-  ["Délai d'installation", "1 à 2 jours ouvrés sur site après livraison, formation comprise."],
+  ["Délai d'installation", "2 jours de travail sur site après livraison, formation comprise."],
   ["Modalités de paiement", "60 % à la commande, 40 % à la réception de l'installation."],
-  ["Garantie", "12 mois pièces et main-d'œuvre sur la pointeuse à compter de la réception. Exclusions : casse, choc, surtension, intervention d'un tiers, usage non conforme."],
-  ["Service après-vente", "Assistance téléphonique et à distance aux heures ouvrables ; intervention sur site à Odienné sous 72 heures ouvrées (déplacement facturé hors garantie) ; remplacement ou réparation via le fabricant FingerTec pendant la garantie."],
+  ...garantieSav,
   ["Validité", "30 jours à compter de la date de l'offre."],
-], { firstColShade: true, firstColBold: true, size: 18 }));
+], { firstColShade: true, firstColBold: true, size: 18 });
 
-body.push(p("Nous restons à votre disposition pour une démonstration ou une visite du chantier afin d'affiner la proposition (nombre d'employés, nombre d'accès, horaires de travail).", { before: 200, after: 200 }));
-body.push(p("Veuillez agréer, Madame, Monsieur, l'expression de nos salutations distinguées.", { after: 360 }));
-body.push(table([4513, 4513], [
-  ["Pour NTECH SUPPORT", "Bon pour accord – Le Client"],
-  ["Stéphane POHE|Technical Manager||||(Signature et cachet)", "Nom :|Fonction :|Date :|||(Signature et cachet)"],
-], { size: 18 }));
+function financialDoc(model, code, lines) {
+  const pt = priceTable(lines);
+  const b = [];
+  b.push(...titleBlock("OFFRE FINANCIÈRE", `Pointeuse biométrique FingerTec ${model} – Chantier d'Odienné`));
+  b.push(infoTable(`OF 2611_____ – ${code} (à compléter)`, `Fourniture, installation, configuration et formation – pointeuse FingerTec ${model} et logiciel de gestion des présences`,
+    [["Offre technique", "Voir l'offre technique jointe (réf. OT 2611_____)"], ["Validité", "30 jours à compter de la date d'émission"]]));
+  b.push(p("Prix exprimés en francs CFA pour une pointeuse installée sur le chantier d'Odienné, transport et mission d'installation compris.", { before: 200 }));
+  b.push(pt.tbl);
+  b.push(p([t("Arrêtée la présente offre à la somme TTC de ", {}), t(fcfa(pt.ht + pt.tva).replace(" F", " francs CFA"), { bold: true }), t(".")], { before: 120, after: 160 }));
+  b.push(options());
+  b.push(h1("Conditions commerciales"));
+  b.push(conditions());
+  b.push(p("", { after: 240 }));
+  b.push(signature());
+  return { doc: makeDoc(`Offre financière – FingerTec ${model}`, b), ht: pt.ht, tva: pt.tva };
+}
 
-const doc = new Document({
-  creator: "NTECH SUPPORT",
-  title: "Offre technique et financière – Pointage biométrique FingerTec",
-  styles: {
-    default: { document: { run: { font: FONT, size: 20 } } },
-    paragraphStyles: [
-      { id: "Heading1", name: "Heading 1", basedOn: "Normal", next: "Normal", quickFormat: true,
-        run: { font: FONT, size: 26, bold: true, color: BLUE },
-        paragraph: { spacing: { before: 280, after: 120 }, keepNext: true, outlineLevel: 0 } },
-      { id: "Heading2", name: "Heading 2", basedOn: "Normal", next: "Normal", quickFormat: true,
-        run: { font: FONT, size: 22, bold: true, color: BLUE },
-        paragraph: { spacing: { before: 180, after: 80 }, keepNext: true, outlineLevel: 1 } },
-    ],
-  },
-  numbering: { config: [{ reference: "bul", levels: [{ level: 0, format: LevelFormat.BULLET, text: "•", alignment: AlignmentType.LEFT,
-    style: { paragraph: { indent: { left: 500, hanging: 260 } } } }] }] },
-  sections: [{
-    properties: { page: { margin: { top: 1300, bottom: 1200, left: 1100, right: 1100, header: 500, footer: 450 } } },
-    headers: { default: header }, footers: { default: footer },
-    children: body,
-  }],
-});
-
-Packer.toBuffer(doc).then((buf) => { fs.writeFileSync(OUT, buf); console.log("written", OUT, "A HT", A.ht, "B HT", B.ht); });
+const outs = [
+  ["Offre_Technique_FingerTec_MATRELEC_Odienne.docx", { doc: makeDoc("Offre technique – Pointage biométrique FingerTec", body) }],
+  ["Offre_Financiere_FaceID5_MATRELEC_Odienne.docx", financialDoc("Face ID 5", "FID5", optB)],
+  ["Offre_Financiere_Q2i_MATRELEC_Odienne.docx", financialDoc("Q2i", "Q2I", optA)],
+];
+(async () => {
+  for (const [name, o] of outs) {
+    fs.writeFileSync(`${OUT}/${name}`, await Packer.toBuffer(o.doc));
+    console.log("written", name, o.ht !== undefined ? `HT ${o.ht} TVA ${o.tva} TTC ${o.ht + o.tva}` : "");
+  }
+})();

@@ -8,20 +8,20 @@ common = [
  ("Mini-onduleur 12 V (autonomie en cas de coupure de courant)", 1, 55000),
  ("Boîtier de protection anti-poussière / anti-pluie pour chantier", 1, 85000),
  ("Cartes de proximité RFID (secours si empreinte illisible)", 50, 1500),
- ("Logiciel FingerTec TCMS V3 – licence perpétuelle (incluse)", 1, 0),
+ ("Logiciel FingerTec TCMS V3 – licence à vie (paiement unique)", 1, 650000),
  ("Installation, fixation, câblage et mise en service sur chantier", 1, 150000),
  ("Configuration logiciel (horaires, retards, heures sup., import personnel) – incluse", 1, 0),
  ("Formation des utilisateurs (½ journée, jusqu'à 5 personnes)", 1, 75000),
- ("Transport du matériel et mission d'installation Abidjan – Odienné (2 techniciens, A/R, hébergement)", 1, 350000),
+ ("Transport du matériel et mission d'installation Abidjan – Odienné (2 techniciens, 2 jours sur site, A/R, hébergement)", 1, 450000),
 ]
 opts = {
  "Option A - Q2i": ("Pointeuse biométrique FingerTec Q2i (empreinte + carte RFID + code)", 740000),
  "Option B - Face ID 5": ("Pointeuse biométrique FingerTec Face ID 5 (empreinte + visage + paume + carte RFID)", 900000),
 }
-wb = Workbook(); wb.remove(wb.active)
+files = {"Option A - Q2i": "Offre_Financiere_Q2i_MATRELEC_Odienne.xlsx", "Option B - Face ID 5": "Offre_Financiere_FaceID5_MATRELEC_Odienne.xlsx"}
 for name, (dev, price) in opts.items():
-    ws = wb.create_sheet(name)
-    ws["A1"] = "NTECH SUPPORT – Offre financière pointage biométrique FingerTec (chantier)"; ws["A1"].font = Font(bold=True, size=13, color=BLUE)
+    wb = Workbook(); ws = wb.active; ws.title = name.split(" - ")[1]
+    ws["A1"] = f"NTECH SUPPORT – Offre financière – Pointeuse FingerTec {name.split(' - ')[1]} (chantier d'Odienné)"; ws["A1"].font = Font(bold=True, size=13, color=BLUE)
     ws["A2"] = "Offre N° 2611_____ – 3 novembre 2026 – Prix en F CFA – Validité 30 jours"; ws["A2"].font = Font(italic=True, color="595959")
     ws["A3"] = "Client : MATRELEC – Site : chantier d'Odienné"
     hdr = ["N°", "Désignation", "Qté", "P.U. HT (F CFA)", "Montant HT (F CFA)"]
@@ -48,8 +48,8 @@ for name, (dev, price) in opts.items():
     n = r + 4
     for line in ["Délai de livraison : 2 à 3 semaines après commande et acompte, + 2 jours d'acheminement à Odienné. Installation : 1 à 2 jours ouvrés.",
                  "Paiement : 60 % à la commande, 40 % à la réception. Garantie : 12 mois pièces et main-d'œuvre.",
-                 "Options HT : routeur 4G + remontée au siège 65 000 F ; kit solaire autonome 250 000 F ; maintenance annuelle 250 000 F/an (dès la 2e année) ; cloud TimeTec TA sur devis."]:
+                 "Options HT : routeur 4G + remontée au siège 65 000 F ; kit solaire autonome 250 000 F ; maintenance annuelle 650 000 F/an transport compris (dès la 2e année) ; cloud TimeTec TA sur devis."]:
         ws.cell(row=n, column=1, value=line).font = Font(italic=True, size=9); n += 1
     for col, w in zip("ABCDE", (6, 70, 7, 18, 20)): ws.column_dimensions[col].width = w
     ws.freeze_panes = "A6"
-wb.save(out); print("saved", out)
+    wb.save(f"{out}/{files[name]}"); print("saved", files[name])
