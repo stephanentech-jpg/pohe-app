@@ -2,7 +2,7 @@ const fs = require("fs");
 const {
   Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType,
   AlignmentType, ShadingType, BorderStyle, Header, Footer, PageNumber, LevelFormat,
-  HeadingLevel, PageBreak, TabStopType,
+  HeadingLevel, PageBreak, TabStopType, ImageRun,
 } = require("docx");
 
 const OUT = process.argv[2];
@@ -63,18 +63,24 @@ function table(widths, rows, o = {}) {
 const fcfa = (n) => n === 0 ? "Inclus" : n.toLocaleString("fr-FR").replace(/ | /g, " ") + " F";
 
 // ---------- pricing (F CFA HT) ----------
-const common = [
+const IMG = process.env.IMG_DIR;
+const img = (name, w, h, type) => new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 120, after: 60 }, children: [new ImageRun({ type, data: fs.readFileSync(`${IMG}/${name}`), transformation: { width: w, height: h } })] });
+const caption = (text) => p([t(text, { italics: true, size: 16, color: "595959" })], { align: AlignmentType.CENTER, after: 160 });
+const common1 = [
   ["Mini-onduleur 12 V (autonomie en cas de coupure de courant)", 1, 55000],
   ["Boîtier de protection anti-poussière / anti-pluie pour chantier", 1, 85000],
   ["Cartes de proximité RFID (secours si empreinte illisible) – lot", 50, 1500],
-  ["Logiciel de gestion des présences FingerTec TCMS V3 – licence à vie (paiement unique)", 1, 650000],
+];
+const common2 = [
   ["Installation, fixation, câblage et mise en service sur chantier", 1, 150000],
   ["Configuration logiciel (horaires, règles retards / heures sup., import du personnel)", 1, 0],
   ["Formation des utilisateurs (½ journée, jusqu'à 5 personnes)", 1, 75000],
   ["Transport du matériel et mission d'installation Abidjan – Odienné (2 techniciens, 2 jours sur site, aller-retour, hébergement)", 1, 450000],
 ];
-const optA = [["Pointeuse biométrique FingerTec Q2i (empreinte + carte RFID + code)", 1, 740000], ...common];
-const optB = [["Pointeuse biométrique FingerTec Face ID 5 (empreinte + visage + paume + carte RFID)", 1, 900000], ...common];
+const optA = [["Pointeuse biométrique FingerTec Q2i (empreinte + carte RFID + code)", 1, 740000], ...common1,
+  ["Logiciel de gestion des présences FingerTec TCMS V3 – licence à vie (paiement unique)", 1, 650000], ...common2];
+const optB = [["Pointeuse biométrique FingerTec Face ID 5 (visage + empreinte + carte RFID + code)", 1, 900000], ...common1,
+  ["Logiciel de gestion des présences FingerTec Ingress – licence à vie (paiement unique)", 1, 650000], ...common2];
 
 function priceTable(lines) {
   let ht = 0;
@@ -128,7 +134,7 @@ const infoTable = (ref, objet, extra = []) => table([2400, 6626], [
   ["Interlocuteur", "Stéphane POHE – Technical Manager – Cel. (225) 07 48 27 07 93 – stephane.ntech@gmail.com"],
 ], { header: false, firstColShade: true, firstColBold: true, size: 19 });
 const garantieSav = [
-  ["Garantie", "12 mois pièces et main-d'œuvre sur la pointeuse à compter de la réception. Exclusions : casse, choc, surtension, intervention d'un tiers, usage non conforme."],
+  ["Garantie", "Pièces et main-d'œuvre à compter de la réception : 24 mois pour le Face ID 5 (garantie constructeur FingerTec), 12 mois pour le Q2i. Exclusions : casse, choc, surtension, intervention d'un tiers, usage non conforme."],
   ["Service après-vente", "Assistance téléphonique et à distance aux heures ouvrables ; intervention sur site à Odienné sous 72 heures ouvrées (déplacement facturé hors garantie) ; remplacement ou réparation via le fabricant FingerTec pendant la garantie."],
 ];
 const signature = () => table([4513, 4513], [
@@ -184,7 +190,7 @@ body.push(h1("2. Architecture de la solution proposée"));
 body.push(p("La pointeuse est installée à l'entrée du chantier, à l'abri (guérite, bungalow ou base vie), dans un boîtier de protection et alimentée par un mini-onduleur. Chaque pointage est enregistré dans la mémoire interne de la pointeuse, ce qui rend le système indépendant du réseau."));
 body.push(table([2300, 6726], [
   ["Mode", "Fonctionnement"],
-  ["Hors connexion Internet", "La pointeuse fonctionne de façon autonome et stocke les pointages. Les données sont récupérées sur le PC de gestion (logiciel TCMS V3) par réseau local (câble Ethernet / routeur sur site). Sur le modèle Q2i, la récupération est aussi possible par clé USB. Aucune connexion Internet n'est requise."],
+  ["Hors connexion Internet", "La pointeuse fonctionne de façon autonome et stocke les pointages. Les données sont récupérées sur le PC de gestion (logiciel FingerTec Ingress ou TCMS V3 selon le modèle) par réseau local (câble Ethernet / routeur sur site). Sur le modèle Q2i, la récupération est aussi possible par clé USB. Aucune connexion Internet n'est requise."],
   ["Avec connexion Internet", "La pointeuse est raccordée en TCP/IP à un routeur 4G sur le chantier (option). Le logiciel installé au siège de MATRELEC télécharge automatiquement les pointages d'Odienné, ou les données sont envoyées vers la plateforme cloud TimeTec TA (option) pour une consultation à distance en temps réel."],
 ], { firstColBold: true, size: 18 }));
 
@@ -193,19 +199,22 @@ body.push(p("Nous vous proposons deux modèles actuels de la gamme FingerTec. Le
 body.push(table([2626, 3200, 3200], [
   ["Caractéristique", "FingerTec Face ID 5 (recommandée)", "FingerTec Q2i"],
   ["Positionnement", "Terminal hybride multi-biométrique – meilleure fiabilité sur chantier", "Pointeuse empreinte digitale – solution économique"],
-  ["Modes d'identification", "Empreinte digitale, visage, paume, carte RFID, code PIN", "Empreinte digitale, carte RFID, code PIN"],
-  ["Capacité empreintes", "10 000 (+ 10 000 visages, 3 000 paumes)", "3 000"],
+  ["Modes d'identification", "Visage, empreinte digitale, carte RFID, code PIN ; paume en option", "Empreinte digitale, carte RFID, code PIN"],
+  ["Capacité", "6 000 visages et 6 000 empreintes (10 000 sur la version 2024)", "3 000 empreintes"],
   ["Mémoire de pointages", "200 000 transactions", "120 000 transactions"],
-  ["Communication", "TCP/IP", "TCP/IP, USB (clé), RS232/RS485"],
-  ["Points forts chantier", "Pointage sans contact (visage/paume) si l'empreinte est usée ou sale ; caméra 2 MP faible luminosité", "Simple, robuste, export par clé USB sans réseau"],
-  ["Logiciel", "TCMS V3 (licence à vie)", "TCMS V3 (licence à vie)"],
-  ["Garantie", "12 mois", "12 mois"],
+  ["Communication", "TCP/IP, RS485, Wiegand", "TCP/IP, USB (clé), RS232/RS485 ; Wi-Fi en option"],
+  ["Points forts chantier", "Pointage sans contact par le visage si l'empreinte est usée ou sale, même avec un masque ; caméra 2 MP faible luminosité ; écran tactile 5''", "Simple, robuste, export par clé USB sans réseau"],
+  ["Logiciel", "FingerTec Ingress (licence à vie)", "FingerTec TCMS V3 (licence à vie)"],
+  ["Garantie", "24 mois (constructeur)", "12 mois"],
 ], { firstColShade: true, firstColBold: true, size: 17 }));
-body.push(p([t("Notre recommandation : ", { bold: true }), t("sur un chantier, une partie des ouvriers a des empreintes usées, coupées ou souillées (ciment, peinture). Le Face ID 5 permet à ces personnes de pointer par le visage ou la paume, sans carte à gérer ni risque de pointage pour un collègue. C'est le modèle le plus vendu de la gamme FingerTec.", { italics: true })], { before: 120 }));
+body.push(p([t("Notre recommandation : ", { bold: true }), t("sur un chantier, une partie des ouvriers a des empreintes usées, coupées ou souillées (ciment, peinture). Le Face ID 5 permet à ces personnes de pointer par le visage (ou la paume, en option), sans carte à gérer ni risque de pointage pour un collègue. C'est le modèle le plus vendu de la gamme FingerTec.", { italics: true })], { before: 120 }));
+
+body.push(img("faceid5_device.png", 118, 244, "png"));
+body.push(caption("FingerTec Face ID 5 – terminal hybride visage / empreinte (photo constructeur)"));
 
 body.push(h1("4. Logiciel de gestion des présences"));
-body.push(h2("4.1 FingerTec TCMS V3"));
-body.push(p("TCMS V3 est le logiciel de gestion des présences de FingerTec. Il s'installe sur un PC Windows du chantier ou du siège et fonctionne entièrement en local, sans Internet."));
+body.push(h2("4.1 Logiciels FingerTec"));
+body.push(p("Le logiciel dépend du modèle choisi : FingerTec Ingress pour le Face ID 5 (gestion des présences et du contrôle d'accès) et FingerTec TCMS V3 pour le Q2i. Les deux s'installent sur un PC Windows du chantier ou du siège et fonctionnent entièrement en local, sans Internet. Fonctions assurées :"));
 [
   ["plannings fixes, rotatifs (équipes / postes) et horaires flexibles, jours fériés et repos ;", "Horaires : "],
   ["calcul automatique des retards, départs anticipés et absences, gestion des congés et justificatifs ;", "Retards et absences : "],
@@ -217,7 +226,7 @@ body.push(p("TCMS V3 est le logiciel de gestion des présences de FingerTec. Il 
 body.push(h2("4.2 Conditions de licence"));
 body.push(table([2626, 6400], [
   ["Logiciel", "Conditions"],
-  ["TCMS V3 (local)", "Licence à vie : paiement unique, sans redevance annuelle. La licence est activée pour votre entreprise et couvre l'ensemble des pointeuses FingerTec du site. Prix : voir les offres financières."],
+  ["Ingress (Face ID 5) ou TCMS V3 (Q2i)", "Licence à vie : paiement unique, sans redevance annuelle. La licence est activée pour votre entreprise et couvre l'ensemble des pointeuses FingerTec du site. Prix : voir les offres financières."],
   ["TimeTec TA (cloud, option)", "Abonnement annuel calculé par employé. Consultation des présences à distance (navigateur et application mobile), alertes, multi-chantiers. Tarif communiqué sur demande selon votre effectif."],
 ], { firstColBold: true, size: 18 }));
 
@@ -226,7 +235,7 @@ body.push(h2("5.1 Installation et configuration"));
 [
   "visite et choix de l'emplacement de la pointeuse (abri, hauteur, éclairage, alimentation) ;",
   "fixation de la pointeuse dans son boîtier de protection, raccordement électrique et mini-onduleur ;",
-  "installation de TCMS V3 sur votre PC et connexion à la pointeuse (réseau local ou USB) ;",
+  "installation du logiciel (Ingress ou TCMS V3) sur votre PC et connexion à la pointeuse (réseau local ou USB) ;",
   "paramétrage des horaires, des règles de retard, d'absence et d'heures supplémentaires selon votre règlement ;",
   "import de la liste du personnel, enrôlement des empreintes (et visages pour le Face ID 5) avec votre référent ;",
   "tests de pointage, de récupération des données et d'export Excel / CSV, puis procès-verbal de réception.",
@@ -251,23 +260,27 @@ body.push(p("Technical Manager – NTECH SUPPORT"));
 const spec = (rows) => table([3000, 6026], [["Caractéristique", "Valeur"], ...rows], { firstColShade: true, firstColBold: true, size: 18 });
 body.push(new Paragraph({ children: [new PageBreak()] }));
 body.push(h1("Annexe – Fiches techniques des équipements"));
-body.push(p("Les fiches constructeur FingerTec (brochures officielles en anglais) sont jointes à la présente offre. Les principales caractéristiques sont reprises ci-dessous.", { italics: true }));
+body.push(p("Principales caractéristiques des équipements proposés. La fiche constructeur officielle du Face ID 5 (FingerTec, 2026) est reproduite à la fin de cette annexe.", { italics: true }));
 body.push(h2("A.1 Pointeuse FingerTec Face ID 5"));
+body.push(img("faceid5_device.png", 97, 200, "png"));
 body.push(spec([
-  ["Type", "Terminal hybride de pointage et de contrôle d'accès multi-biométrique"],
-  ["Modes d'identification", "Visage, empreinte digitale, paume, carte RFID, code PIN (combinables)"],
-  ["Capacité visages", "10 000"],
-  ["Capacité empreintes", "10 000"],
-  ["Capacité paumes", "3 000"],
-  ["Capacité cartes", "10 000"],
-  ["Mémoire de pointages", "200 000 transactions"],
-  ["Caméra", "2 mégapixels, WDR, adaptée à la faible luminosité"],
+  ["Type", "Terminal hybride de reconnaissance faciale – pointage et contrôle d'accès"],
+  ["Modes d'identification", "Visage (1:N), empreinte (1:1, 1:N), code PIN ; paume et QR code en option"],
+  ["Capacité visages", "6 000 (10 000 sur la version 2024)"],
+  ["Capacité empreintes", "6 000 (10 000 sur la version 2024)"],
+  ["Capacité paumes (option)", "3 000"],
+  ["Mémoire de pointages", "200 000 transactions, 7 500 photos de pointage"],
+  ["Temps de vérification", "Empreinte < 1 s ; visage < 2 s"],
+  ["Capteurs", "Caméra 2 MP WDR basse lumière, lecteur d'empreintes haute résolution"],
+  ["Écran", "Écran tactile couleur TFT 5 pouces"],
   ["Processeur / mémoire", "Double cœur 900 MHz, 512 Mo RAM, 8 Go flash"],
-  ["Écran", "Écran tactile couleur"],
-  ["Communication", "TCP/IP (réseau local, routeur 4G)"],
-  ["Boîtier", "Façade en verre, cadre aluminium"],
-  ["Logiciel compatible", "FingerTec TCMS V3, TimeTec TA (cloud)"],
-  ["Garantie", "12 mois"],
+  ["Communication", "TCP/IP, RS485, Wiegand (entrée / sortie)"],
+  ["Contrôle d'accès", "Sortie relais de gâche, alarme, bouton de sortie, contact de porte"],
+  ["Alimentation", "12 V DC, 3 A"],
+  ["Environnement", "0 à 45 °C ; humidité 10 à 90 %"],
+  ["Dimensions", "92 × 23 × 203 mm ; façade verre, cadre aluminium"],
+  ["Logiciels compatibles", "FingerTec Ingress, TimeTec TA (cloud)"],
+  ["Garantie", "24 mois (garantie constructeur FingerTec)"],
 ]));
 body.push(h2("A.2 Pointeuse FingerTec Q2i"));
 body.push(spec([
@@ -276,14 +289,14 @@ body.push(spec([
   ["Capacité empreintes", "3 000"],
   ["Mémoire de pointages", "120 000 transactions"],
   ["Écran", "Écran couleur TFT"],
-  ["Communication", "TCP/IP, RS232 / RS485, port USB (récupération des pointages par clé USB)"],
+  ["Communication", "TCP/IP, RS232 / RS485, port USB (récupération des pointages par clé USB) ; Wi-Fi en option"],
   ["Alimentation", "12 V DC, mini-onduleur en option"],
   ["Logiciel compatible", "FingerTec TCMS V3, TimeTec TA (cloud)"],
   ["Garantie", "12 mois"],
 ]));
-body.push(h2("A.3 Logiciel FingerTec TCMS V3"));
+body.push(h2("A.3 Logiciels FingerTec Ingress et TCMS V3"));
 body.push(spec([
-  ["Type", "Logiciel de gestion des présences, installé en local"],
+  ["Type", "Logiciels de gestion des présences installés en local : Ingress (Face ID 5), TCMS V3 (Q2i)"],
   ["Poste requis", "PC sous Windows 10 / 11"],
   ["Fonctionnement", "Sans Internet (réseau local ou clé USB) ; téléchargement automatique des pointages si connecté"],
   ["Horaires", "Fixes, rotatifs, flexibles ; jours fériés et repos"],
@@ -299,6 +312,13 @@ body.push(spec([
   ["Cartes RFID", "Cartes de proximité pour les employés dont l'empreinte est difficile à lire"],
 ]));
 
+body.push(new Paragraph({ children: [new PageBreak()] }));
+body.push(h2("A.5 Fiche constructeur FingerTec Face ID 5 (1/2)"));
+body.push(img("faceid5_fiche_1.jpg", 560, 732, "jpg"));
+body.push(new Paragraph({ children: [new PageBreak()] }));
+body.push(h2("A.5 Fiche constructeur FingerTec Face ID 5 (2/2)"));
+body.push(img("faceid5_fiche_2.jpg", 560, 743, "jpg"));
+
 // ===================== 2) OFFRES FINANCIÈRES =====================
 const options = () => table([5600, 3426], [
   ["Options complémentaires", "Prix HT"],
@@ -312,7 +332,7 @@ const conditions = () => table([2626, 6400], [
   ["Rubrique", "Conditions"],
   ["Délai de livraison", "2 à 3 semaines après réception du bon de commande et de l'acompte (importation directe FingerTec), plus 2 jours d'acheminement jusqu'à Odienné."],
   ["Délai d'installation", "2 jours de travail sur site après livraison, formation comprise."],
-  ["Modalités de paiement", "60 % à la commande, 40 % à la réception de l'installation."],
+  ["Modalités de paiement", "70 % à la commande, 30 % à la réception de l'installation."],
   ...garantieSav,
   ["Validité", "30 jours à compter de la date de l'offre."],
 ], { firstColShade: true, firstColBold: true, size: 18 });
